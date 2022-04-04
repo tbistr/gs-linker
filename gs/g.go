@@ -8,9 +8,9 @@ import (
 )
 
 // HandleGithubEvent returns handlerFunc for github webhook event request.
-func (gs *Linker) HandleGithubEvent() func(http.ResponseWriter, *http.Request) {
+func (linker *Linker) HandleGithubEvent() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		payload, err := github.ValidatePayload(r, gs.gSecret)
+		payload, err := github.ValidatePayload(r, linker.gConfig.secret)
 		if err != nil {
 			log.Println(err)
 			w.WriteHeader(http.StatusBadRequest)
