@@ -15,3 +15,5 @@
 # vendor/
 
 private-key.pem
+
+.env
