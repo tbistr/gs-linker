@@ -16,6 +16,7 @@ type envs struct {
 	GhInstallationID int64  `env:"GH_INSTALLATION_ID"`
 	SlToken          string `env:"SL_TOKEN"`
 	SlSigningSecret  string `env:"SL_SIGNING_SECRET"`
+	SlBotUserID      string `env:"SL_BOT_USER_ID"`
 }
 
 func main() {
@@ -23,10 +24,10 @@ func main() {
 	if err := env.Parse(&e); err != nil {
 		log.Fatalln(err)
 	}
-	log.Printf("Get envs: %+v\n", e)
+	log.Printf("get envs: %+v\n", e)
 
 	ghClient := gh.New(e.GhAppID, e.GhInstallationID)
-	slClient := sl.New(e.SlToken, e.SlSigningSecret)
+	slClient := sl.New(e.SlToken, e.SlSigningSecret, e.SlBotUserID)
 
 	links := link.Links{}
 

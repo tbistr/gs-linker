@@ -24,7 +24,9 @@ func (links *Links) Sub(g *gh.Thread, s *sl.Thread) error {
 
 	l := &Link{Gh: g, Sl: s}
 	links.links = append(links.links, l)
-	log.Printf("link is created: %+v\n", l)
+	// TODO: meaningless logs
+	// ex. create link: &{0xc000210180 0xc00020a040}
+	log.Printf("create link: %+v\n", l)
 	return nil
 }
 
@@ -46,7 +48,7 @@ func (links *Links) UnSub(s *sl.Thread) error {
 			links.links[len(links.links)-1] = nil
 			links.links = links.links[:len(links.links)-1]
 
-			log.Printf("link is removed: %+v\n", res)
+			log.Printf("remove link: %+v\n", res)
 			return nil
 		}
 	}

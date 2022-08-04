@@ -34,20 +34,23 @@ type Thread struct {
 type OnMentionedFunc func(client *Client, thread *Thread, text string) error
 type OnMsgSentFunc func(client *Client, thread *Thread, text string) error
 
-func New(token, signingSecret string) *Client {
+func New(token, signingSecret, botUserID string) *Client {
+	log.Println("creating github client")
+	defer log.Println("created github client")
 	return &Client{
 		slack: slack.New(token),
 		config: &config{
 			token:         token,
 			signingSecret: signingSecret,
+			mentionedText: "<@" + botUserID + ">",
 		},
 		onMentioned: func(client *Client, thread *Thread, text string) error {
 			// TODO: print thread info.
-			log.Println("slack.Client.onMentioned is not registered.")
+			log.Println("slack.Client.onMentioned is not registered")
 			return nil
 		},
 		onMsgSent: func(client *Client, thread *Thread, text string) error {
-			log.Println("slack.Client.onMsgSent is not registered.")
+			log.Println("slack.Client.onMsgSent is not registered")
 			return nil
 		},
 	}
@@ -62,13 +65,4 @@ func (Client *Client) RegisterOnMentioned(f OnMentionedFunc) {
 
 func (Client *Client) RegisterOnMsgSent(f OnMsgSentFunc) {
 	Client.onMsgSent = f
-}
-
-func (Client *Client) reloadUserID(botID string) {
-	bot, err := Client.slack.GetBotInfo(botID)
-	if err != nil {
-		log.Printf("cant find bot's user id: %v\n", err)
-		return
-	}
-	Client.config.mentionedText = "<@" + bot.UserID + ">"
 }

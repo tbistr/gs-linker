@@ -31,7 +31,7 @@ func (client *Client) HandleEvent() func(http.ResponseWriter, *http.Request) {
 			// I couldnt find the doc about user-type.
 			// https://docs.github.com/ja/rest/users/users
 			if event.Comment.GetUser().GetType() == "User" {
-				log.Printf("caught issue comment event from: %s\n", event.Comment.GetURL())
+				log.Printf("catch issue comment event from: %s\n", event.Comment.GetURL())
 				// Get~ method avoids nil references.
 				// (If the structure is nil, it returns a zero-value.)
 				// memo: needs guard?
@@ -49,7 +49,7 @@ func (client *Client) HandleEvent() func(http.ResponseWriter, *http.Request) {
 			return
 		case *github.PullRequestReviewCommentEvent:
 			if event.Comment.GetUser().GetType() == "User" {
-				log.Printf("caught pull request comment event from: %s\n", event.Comment.GetURL())
+				log.Printf("catch pull request comment event from: %s\n", event.Comment.GetURL())
 				thread := &Thread{
 					SubType: PR,
 					Owner:   event.GetRepo().GetOwner().GetName(),

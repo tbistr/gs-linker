@@ -41,6 +41,9 @@ type OnIssueCommentedFunc func(client *Client, thread *Thread, comment *github.I
 type OnPrCommentedFunc func(client *Client, thread *Thread, comment *github.PullRequestComment) error
 
 func New(appID, installationID int64) *Client {
+	log.Println("creating github client")
+	defer log.Println("created github client")
+
 	g, err := newGithubClient(appID, installationID)
 	if err != nil {
 		log.Fatal(err)
