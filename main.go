@@ -29,10 +29,10 @@ func main() {
 	slClient := sl.New(e.SlToken, e.SlSigningSecret)
 
 	var (
-		// onIssueCommented gh.OnIssueCommentedFunc = func(client *gh.Client, owner, repo string, num int, comment *github.IssueComment) error {
+		// onIssueCommented gh.OnIssueCommentedFunc = func(client *gh.Client, thread *gh.Thread, comment *github.IssueComment) error {
 		// 	return nil
 		// }
-		// onPrCommented gh.OnPrCommentedFunc = func(client *gh.Client, owner, repo string, num int, comment *github.PullRequestComment) error {
+		// onPrCommented gh.OnPrCommentedFunc = func(client *gh.Client, thread *gh.Thread, comment *github.PullRequestComment) error {
 		// 	return nil
 		// }
 
@@ -51,6 +51,9 @@ func main() {
 			return nil
 		}
 	)
+
+	// ghClient.RegisterOnIssueCommented(onIssueCommented)
+	// ghClient.RegisterOnPrCommented(onPrCommented)
 	slClient.RegisterOnMentioned(onMentioned)
 	slClient.RegisterOnMsgSent(onMsgSent)
 
