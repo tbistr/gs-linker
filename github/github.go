@@ -38,8 +38,8 @@ const (
 	PR    = SubType("pull request")
 )
 
-type OnIssueCommentedFunc func(client *Client, owner string, repo string, num int, comment *github.IssueComment) error
-type OnPrCommentedFunc func(client *Client, owner string, repo string, num int, comment *github.PullRequestComment) error
+type OnIssueCommentedFunc func(client *Client, thread *Thread, comment *github.IssueComment) error
+type OnPrCommentedFunc func(client *Client, thread *Thread, comment *github.PullRequestComment) error
 
 func New(appID, installationID int64) *Client {
 	g, err := newGithubClient(appID, installationID)
@@ -51,11 +51,11 @@ func New(appID, installationID int64) *Client {
 		config: &config{
 			secret: []byte{},
 		},
-		onIssueCommented: func(client *Client, owner, repo string, num int, comment *github.IssueComment) error {
+		onIssueCommented: func(client *Client, thread *Thread, comment *github.IssueComment) error {
 			log.Println("github.Client.onIssueCommented is not registered.")
 			return nil
 		},
-		onPrCommented: func(client *Client, owner, repo string, num int, comment *github.PullRequestComment) error {
+		onPrCommented: func(client *Client, thread *Thread, comment *github.PullRequestComment) error {
 			log.Println("github.Client.onPrCommented is not registered.")
 			return nil
 		},

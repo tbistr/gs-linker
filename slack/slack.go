@@ -28,8 +28,8 @@ type Thread struct {
 	TS      string
 }
 
-type OnMentionedFunc func(client *Client, channel, threadTS, text string) error
-type OnMsgSentFunc func(client *Client, channel, threadTS, text string) error
+type OnMentionedFunc func(client *Client, thread *Thread, text string) error
+type OnMsgSentFunc func(client *Client, thread *Thread, text string) error
 
 func New(token, signingSecret string) *Client {
 	return &Client{
@@ -38,11 +38,12 @@ func New(token, signingSecret string) *Client {
 			token:         token,
 			signingSecret: signingSecret,
 		},
-		onMentioned: func(client *Client, channel, threadTS, text string) error {
+		onMentioned: func(client *Client, thread *Thread, text string) error {
+			// TODO: print thread info.
 			log.Println("slack.Client.onMentioned is not registered.")
 			return nil
 		},
-		onMsgSent: func(client *Client, channel, threadTS, text string) error {
+		onMsgSent: func(client *Client, thread *Thread, text string) error {
 			log.Println("slack.Client.onMsgSent is not registered.")
 			return nil
 		},

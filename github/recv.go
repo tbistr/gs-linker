@@ -32,7 +32,13 @@ func (client *Client) HandleEvent() func(http.ResponseWriter, *http.Request) {
 			owner := event.GetRepo().GetOwner().GetName()
 			repo := event.GetRepo().GetName()
 			num := event.GetIssue().GetNumber()
-			if err := client.onIssueCommented(client, owner, repo, num, event.GetComment()); err != nil {
+			thread := &Thread{
+				SubType: ISSUE,
+				Owner:   owner,
+				Repo:    repo,
+				Num:     num,
+			}
+			if err := client.onIssueCommented(client, thread, event.GetComment()); err != nil {
 				log.Println(err)
 				w.WriteHeader(http.StatusInternalServerError)
 			}
@@ -41,7 +47,13 @@ func (client *Client) HandleEvent() func(http.ResponseWriter, *http.Request) {
 			owner := event.GetRepo().GetOwner().GetName()
 			repo := event.GetRepo().GetName()
 			num := event.GetPullRequest().GetNumber()
-			if err := client.onPrCommented(client, owner, repo, num, event.GetComment()); err != nil {
+			thread := &Thread{
+				SubType: PR,
+				Owner:   owner,
+				Repo:    repo,
+				Num:     num,
+			}
+			if err := client.onPrCommented(client, thread, event.GetComment()); err != nil {
 				log.Println(err)
 				w.WriteHeader(http.StatusInternalServerError)
 			}

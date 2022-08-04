@@ -36,16 +36,17 @@ func main() {
 		// 	return nil
 		// }
 
-		onMentioned sl.OnMentionedFunc = func(client *sl.Client, channel, threadTS, text string) error {
+		onMentioned sl.OnMentionedFunc = func(client *sl.Client, thread *sl.Thread, text string) error {
 			fmt.Println("Mentioned:")
-			pp.Println(channel)
-			pp.Println(threadTS)
+			pp.Println(thread.Channel)
+			pp.Println(thread.TS)
 			pp.Println(text)
 			return nil
 		}
-		onMsgSent sl.OnMsgSentFunc = func(client *sl.Client, channel, threadTS, text string) error {
+		onMsgSent sl.OnMsgSentFunc = func(client *sl.Client, thread *sl.Thread, text string) error {
 			fmt.Println("MsgSent:")
-			pp.Println(threadTS)
+			pp.Println(thread.Channel)
+			pp.Println(thread.TS)
 			pp.Println(text)
 			return nil
 		}
