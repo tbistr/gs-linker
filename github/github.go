@@ -22,6 +22,22 @@ type config struct {
 	secret []byte
 }
 
+// Thread is info to designate github thread.
+type Thread struct {
+	SubType SubType
+	Owner   string
+	Repo    string
+	Num     int
+}
+
+// SubType is issue or pull request.
+type SubType string
+
+const (
+	ISSUE = SubType("issue")
+	PR    = SubType("pull request")
+)
+
 type OnIssueCommentedFunc func(client *Client, owner string, repo string, num int, comment *github.IssueComment) error
 type OnPrCommentedFunc func(client *Client, owner string, repo string, num int, comment *github.PullRequestComment) error
 

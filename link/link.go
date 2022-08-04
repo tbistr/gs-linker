@@ -1,31 +1,65 @@
 package link
 
-// Links consists of link
-type Links []*Link
+// TODO: Rewrite by bimap.
+// TODO: Add testing.
 
-// Link is bidirectional map between slack thread and github issue
+import (
+	"sync"
+
+	gh "github.com/tbistr/gs-linker/github"
+	sl "github.com/tbistr/gs-linker/slack"
+)
+
+// Links consists of Link.
+type Links struct {
+	mu    sync.RWMutex
+	links []*Link
+}
+
+// Link is bidirectional map between slack thread and github issue.
 type Link struct {
-	G              string
-	SlackTimestamp string
+	Gh gh.Thread
+	Sl sl.Thread
 }
 
-// Sub subscribes a link
+// Sub subscribes a link.
 //
-// does not check if the link is already registered
-func (links *Links) Sub(g, s string) {
-	*links = append(*links, &Link{G: g, SlackTimestamp: s})
-}
+// Returns subscribed *Link, nil if already subscribed.
+func (links *Links) Sub(g gh.Thread, s sl.Thread) *Link {
+	links.mu.Lock()
+	defer links.mu.Unlock()
 
-// UnSub unsbscribe specified link
-//
-// assume that a link is unsbscribed from slack
-func (links *Links) UnSub(s string) {
-	for i := range *links {
-		if (*links)[i].SlackTimestamp == s {
-			(*links)[i] = (*links)[len(*links)-1]
-			(*links)[len(*links)-1] = nil
-			*links = (*links)[:len(*links)-1]
-			return
+	for _, l := range links.links {
+		if s.Channel == l.Sl.Channel && s.TS == l.Sl.TS {
+			return nil
 		}
 	}
+
+	l := &Link{Gh: g, Sl: s}
+	links.links = append(links.links, l)
+	return l
+}
+
+// UnSub unsbscribes specified link.
+//
+// Assumes that the link is unsbscribed only from slack.
+// Returns ubsubscribed *Link, or nil if already ubsubscribed.
+func (links *Links) UnSub(s sl.Thread) *Link {
+	links.mu.Lock()
+	defer links.mu.Unlock()
+
+	// TODO: linked list can reduce computation.
+	for i, l := range links.links {
+		if s.Channel == l.Sl.Channel && s.TS == l.Sl.TS {
+			// should not use `res = l`, because I dont know whether overwittern by del-sequence or not.
+			res := links.links[len(links.links)-1]
+			// https://zenn.dev/mattn/articles/31dfed3c89956d
+			links.links[i] = links.links[len(links.links)-1]
+			links.links[len(links.links)-1] = nil
+			links.links = links.links[:len(links.links)-1]
+			return res
+		}
+	}
+
+	return nil
 }

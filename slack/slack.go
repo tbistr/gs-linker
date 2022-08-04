@@ -22,6 +22,12 @@ type config struct {
 	signingSecret string
 }
 
+// Thread is info to designate slack thread.
+type Thread struct {
+	Channel string
+	TS      string
+}
+
 type OnMentionedFunc func(client *Client, channel, threadTS, text string) error
 type OnMsgSentFunc func(client *Client, channel, threadTS, text string) error
 
