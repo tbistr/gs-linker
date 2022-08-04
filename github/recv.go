@@ -9,6 +9,8 @@ import (
 
 // HandleEvent returns handlerFunc for github webhook event requests.
 func (client *Client) HandleEvent() func(http.ResponseWriter, *http.Request) {
+	// Refer example.
+	// https://github.com/google/go-github#webhooks
 	return func(w http.ResponseWriter, r *http.Request) {
 		payload, err := github.ValidatePayload(r, client.config.secret)
 		if err != nil {

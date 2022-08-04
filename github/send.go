@@ -7,6 +7,8 @@ import (
 	"github.com/k0kubun/pp/v3"
 )
 
+// TODO: send as slack user name and image?
+
 func (client *Client) CreateIssueComment(ctx context.Context, thread *Thread, body string) {
 	comment := &github.IssueComment{
 		Body: &body,

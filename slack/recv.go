@@ -12,12 +12,16 @@ import (
 
 // HandleEvent returns handlerFunc for slack webhook event requests.
 func (client *Client) HandleEvent() func(http.ResponseWriter, *http.Request) {
+	// Refer exemple.
+	// https://github.com/slack-go/slack/blob/master/examples/eventsapi/events.go
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+
+		// Verify credentials.
 		sv, err := slack.NewSecretsVerifier(r.Header, client.config.signingSecret)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -31,12 +35,16 @@ func (client *Client) HandleEvent() func(http.ResponseWriter, *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
+		// Verify credentials.
+
 		event, err := slackevents.ParseEvent(json.RawMessage(body), slackevents.OptionNoVerifyToken())
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
+		// For initial setup.
+		// Check if the URL is accessible.
 		if event.Type == slackevents.URLVerification {
 			var r *slackevents.ChallengeResponse
 			err := json.Unmarshal([]byte(body), &r)
