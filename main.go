@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/caarlos0/env/v6"
+	"github.com/google/go-github/v45/github"
 	gh "github.com/tbistr/gs-linker/github"
 	"github.com/tbistr/gs-linker/link"
 	sl "github.com/tbistr/gs-linker/slack"
@@ -32,19 +33,20 @@ func main() {
 	links := link.Links{}
 
 	var (
-		// onIssueCommented gh.OnIssueCommentedFunc = func(client *gh.Client, thread *gh.Thread, comment *github.IssueComment) error {
-		// 	return nil
-		// }
-		// onPrCommented gh.OnPrCommentedFunc = func(client *gh.Client, thread *gh.Thread, comment *github.PullRequestComment) error {
-		// 	return nil
-		// }
+		onCommented gh.OnCommentedFunc = func(client *gh.Client, thread *gh.Thread, comment *github.IssueComment) error {
+			s, err := links.SearchByG(thread)
+			if err != nil {
+				return err
+			}
+			return slClient.SendMsg(s, comment.GetBody())
+		}
 
 		onMentioned sl.OnMentionedFunc = func(client *sl.Client, thread *sl.Thread, text string) error {
+			// TODO: parse msg.
 			gThread := gh.Thread{
-				SubType: gh.ISSUE,
-				Owner:   "tbistr",
-				Repo:    "gs-linker",
-				Num:     8,
+				Owner: "tbistr",
+				Repo:  "gs-linker",
+				Num:   8,
 			}
 			return links.Sub(&gThread, thread)
 		}
@@ -59,8 +61,7 @@ func main() {
 		}
 	)
 
-	// ghClient.RegisterOnIssueCommented(onIssueCommented)
-	// ghClient.RegisterOnPrCommented(onPrCommented)
+	ghClient.RegisterOnCommented(onCommented)
 	slClient.RegisterOnMentioned(onMentioned)
 	slClient.RegisterOnMsgSent(onMsgSent)
 

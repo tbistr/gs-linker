@@ -10,10 +10,9 @@ import (
 )
 
 type Client struct {
-	github           *github.Client
-	config           *config
-	onIssueCommented OnIssueCommentedFunc
-	onPrCommented    OnPrCommentedFunc
+	github      *github.Client
+	config      *config
+	onCommented OnCommentedFunc
 }
 
 // config for github
@@ -37,8 +36,7 @@ const (
 	PR    = SubType("pull request")
 )
 
-type OnIssueCommentedFunc func(client *Client, thread *Thread, comment *github.IssueComment) error
-type OnPrCommentedFunc func(client *Client, thread *Thread, comment *github.PullRequestComment) error
+type OnCommentedFunc func(client *Client, thread *Thread, comment *github.IssueComment) error
 
 func New(appID, installationID int64) *Client {
 	log.Println("creating github client")
@@ -53,12 +51,8 @@ func New(appID, installationID int64) *Client {
 		config: &config{
 			secret: []byte{},
 		},
-		onIssueCommented: func(client *Client, thread *Thread, comment *github.IssueComment) error {
+		onCommented: func(client *Client, thread *Thread, comment *github.IssueComment) error {
 			log.Println("github.Client.onIssueCommented is not registered.")
-			return nil
-		},
-		onPrCommented: func(client *Client, thread *Thread, comment *github.PullRequestComment) error {
-			log.Println("github.Client.onPrCommented is not registered.")
 			return nil
 		},
 	}
@@ -79,10 +73,6 @@ func newGithubClient(appID, installationID int64) (*github.Client, error) {
 // We want to use slClient in On~Handlers.
 // So, We shouldnt assign handlers in New func.
 
-func (Client *Client) RegisterOnIssueCommented(f OnIssueCommentedFunc) {
-	Client.onIssueCommented = f
-}
-
-func (Client *Client) RegisterOnPrCommented(f OnPrCommentedFunc) {
-	Client.onPrCommented = f
+func (Client *Client) RegisterOnCommented(f OnCommentedFunc) {
+	Client.onCommented = f
 }

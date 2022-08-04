@@ -68,7 +68,7 @@ func (client *Client) HandleEvent() func(http.ResponseWriter, *http.Request) {
 				log.Printf("catch mentioned event: %+v\n", event)
 				if err := client.onMentioned(client, &Thread{Channel: event.Channel, TS: event.ThreadTimeStamp}, event.Text); err != nil {
 					log.Println(err)
-					w.WriteHeader(http.StatusInternalServerError)
+					return
 				}
 				return
 			case *slackevents.MessageEvent:
@@ -84,7 +84,7 @@ func (client *Client) HandleEvent() func(http.ResponseWriter, *http.Request) {
 				log.Printf("catch message event: %+v\n", event)
 				if err := client.onMsgSent(client, &Thread{Channel: event.Channel, TS: event.ThreadTimeStamp}, event.Text); err != nil {
 					log.Println(err)
-					w.WriteHeader(http.StatusInternalServerError)
+					return
 				}
 				return
 			}

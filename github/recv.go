@@ -36,32 +36,20 @@ func (client *Client) HandleEvent() func(http.ResponseWriter, *http.Request) {
 				// (If the structure is nil, it returns a zero-value.)
 				// memo: needs guard?
 				thread := &Thread{
-					SubType: ISSUE,
-					Owner:   event.GetRepo().GetOwner().GetName(),
-					Repo:    event.GetRepo().GetName(),
-					Num:     event.GetIssue().GetNumber(),
+					// see objects.
+					// https://docs.github.com/en/graphql/reference/objects
+					Owner: event.GetRepo().GetOwner().GetLogin(), // GetName doesnt return user name.
+					Repo:  event.GetRepo().GetName(),
+					Num:   event.GetIssue().GetNumber(),
 				}
-				if err := client.onIssueCommented(client, thread, event.GetComment()); err != nil {
+				if err := client.onCommented(client, thread, event.GetComment()); err != nil {
 					log.Println(err)
-					w.WriteHeader(http.StatusInternalServerError)
 				}
 			}
 			return
-		case *github.PullRequestReviewCommentEvent:
-			if event.Comment.GetUser().GetType() == "User" {
-				log.Printf("catch pull request comment event from: %s\n", event.Comment.GetURL())
-				thread := &Thread{
-					SubType: PR,
-					Owner:   event.GetRepo().GetOwner().GetName(),
-					Repo:    event.GetRepo().GetName(),
-					Num:     event.GetPullRequest().GetNumber(),
-				}
-				if err := client.onPrCommented(client, thread, event.GetComment()); err != nil {
-					log.Println(err)
-					w.WriteHeader(http.StatusInternalServerError)
-				}
-			}
-			return
+			// case *github.PullRequestReviewCommentEvent:
+			// pr comment is also issue comment.
+			// https://docs.github.com/en/developers/webhooks-and-events/events/issue-event-types#commented
 		}
 	}
 }
