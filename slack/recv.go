@@ -59,6 +59,10 @@ func (client *Client) HandleEvent() func(http.ResponseWriter, *http.Request) {
 		if event.Type == slackevents.CallbackEvent {
 			switch event := event.InnerEvent.Data.(type) {
 			case *slackevents.AppMentionEvent:
+				// get gslinker's user id at the first event.
+				if client.config.mentionedText == "" {
+					client.reloadUserID(event.BotID)
+				}
 				// TODO: consider if Mentioned as single msg. (event.ThreadTimeStamp=="")
 				if err := client.onMentioned(client, &Thread{Channel: event.Channel, TS: event.ThreadTimeStamp}, event.Text); err != nil {
 					log.Println(err)
@@ -67,12 +71,14 @@ func (client *Client) HandleEvent() func(http.ResponseWriter, *http.Request) {
 				return
 			case *slackevents.MessageEvent:
 				// It is impossible to determine from the event whether the message is a reply or not.
-				// If ThreadTS is "", go through, but the registrant should determine if the message is a reply to the bot.
 				if event.ThreadTimeStamp == "" {
 					return
 				}
-				// If mentioned, handlerFunc is called twice.
-				// TODO: ignore mentioned msg that have already been handled.
+				// It also fires `AppMentionEvent`
+				// Ignore mentioned msg that have already been handled.
+				if !client.containMention(event.Text) {
+					return
+				}
 				if err := client.onMsgSent(client, &Thread{Channel: event.Channel, TS: event.ThreadTimeStamp}, event.Text); err != nil {
 					log.Println(err)
 					w.WriteHeader(http.StatusInternalServerError)

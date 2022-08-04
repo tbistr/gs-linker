@@ -20,6 +20,9 @@ type Client struct {
 type config struct {
 	token         string
 	signingSecret string
+	// userID is mentioned id string.
+	// assumes `<@userID> this is mentioned message`.
+	mentionedText string
 }
 
 // Thread is info to designate slack thread.
@@ -59,4 +62,13 @@ func (Client *Client) RegisterOnMentioned(f OnMentionedFunc) {
 
 func (Client *Client) RegisterOnMsgSent(f OnMsgSentFunc) {
 	Client.onMsgSent = f
+}
+
+func (Client *Client) reloadUserID(botID string) {
+	bot, err := Client.slack.GetBotInfo(botID)
+	if err != nil {
+		log.Printf("cant find bot's user id: %v\n", err)
+		return
+	}
+	Client.config.mentionedText = "<@" + bot.UserID + ">"
 }
