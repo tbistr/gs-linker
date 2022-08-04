@@ -28,36 +28,38 @@ func (client *Client) HandleEvent() func(http.ResponseWriter, *http.Request) {
 
 		switch event := event.(type) {
 		case *github.IssueCommentEvent:
-			// Get~ method avoids nil references.
-			// (If the structure is nil, it returns a zero-value.)
-			// memo: needs guard?
-			owner := event.GetRepo().GetOwner().GetName()
-			repo := event.GetRepo().GetName()
-			num := event.GetIssue().GetNumber()
-			thread := &Thread{
-				SubType: ISSUE,
-				Owner:   owner,
-				Repo:    repo,
-				Num:     num,
-			}
-			if err := client.onIssueCommented(client, thread, event.GetComment()); err != nil {
-				log.Println(err)
-				w.WriteHeader(http.StatusInternalServerError)
+			// I couldnt find the doc about user-type.
+			// https://docs.github.com/ja/rest/users/users
+			if event.Comment.GetUser().GetType() == "User" {
+				log.Printf("caught issue comment event from: %s\n", event.Comment.GetURL())
+				// Get~ method avoids nil references.
+				// (If the structure is nil, it returns a zero-value.)
+				// memo: needs guard?
+				thread := &Thread{
+					SubType: ISSUE,
+					Owner:   event.GetRepo().GetOwner().GetName(),
+					Repo:    event.GetRepo().GetName(),
+					Num:     event.GetIssue().GetNumber(),
+				}
+				if err := client.onIssueCommented(client, thread, event.GetComment()); err != nil {
+					log.Println(err)
+					w.WriteHeader(http.StatusInternalServerError)
+				}
 			}
 			return
 		case *github.PullRequestReviewCommentEvent:
-			owner := event.GetRepo().GetOwner().GetName()
-			repo := event.GetRepo().GetName()
-			num := event.GetPullRequest().GetNumber()
-			thread := &Thread{
-				SubType: PR,
-				Owner:   owner,
-				Repo:    repo,
-				Num:     num,
-			}
-			if err := client.onPrCommented(client, thread, event.GetComment()); err != nil {
-				log.Println(err)
-				w.WriteHeader(http.StatusInternalServerError)
+			if event.Comment.GetUser().GetType() == "User" {
+				log.Printf("caught pull request comment event from: %s\n", event.Comment.GetURL())
+				thread := &Thread{
+					SubType: PR,
+					Owner:   event.GetRepo().GetOwner().GetName(),
+					Repo:    event.GetRepo().GetName(),
+					Num:     event.GetPullRequest().GetNumber(),
+				}
+				if err := client.onPrCommented(client, thread, event.GetComment()); err != nil {
+					log.Println(err)
+					w.WriteHeader(http.StatusInternalServerError)
+				}
 			}
 			return
 		}

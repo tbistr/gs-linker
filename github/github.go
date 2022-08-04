@@ -7,7 +7,6 @@ import (
 
 	"github.com/bradleyfalzon/ghinstallation"
 	"github.com/google/go-github/v45/github"
-	"github.com/k0kubun/pp"
 )
 
 type Client struct {
@@ -44,7 +43,7 @@ type OnPrCommentedFunc func(client *Client, thread *Thread, comment *github.Pull
 func New(appID, installationID int64) *Client {
 	g, err := newGithubClient(appID, installationID)
 	if err != nil {
-		panic(pp.Sprintln(err))
+		log.Fatal(err)
 	}
 	return &Client{
 		github: g,

@@ -1,13 +1,13 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"net/http"
 
 	"github.com/caarlos0/env/v6"
-	"github.com/k0kubun/pp/v3"
 	gh "github.com/tbistr/gs-linker/github"
+	"github.com/tbistr/gs-linker/link"
 	sl "github.com/tbistr/gs-linker/slack"
 )
 
@@ -28,6 +28,8 @@ func main() {
 	ghClient := gh.New(e.GhAppID, e.GhInstallationID)
 	slClient := sl.New(e.SlToken, e.SlSigningSecret)
 
+	links := link.Links{}
+
 	var (
 		// onIssueCommented gh.OnIssueCommentedFunc = func(client *gh.Client, thread *gh.Thread, comment *github.IssueComment) error {
 		// 	return nil
@@ -37,17 +39,21 @@ func main() {
 		// }
 
 		onMentioned sl.OnMentionedFunc = func(client *sl.Client, thread *sl.Thread, text string) error {
-			fmt.Println("Mentioned:")
-			pp.Println(thread.Channel)
-			pp.Println(thread.TS)
-			pp.Println(text)
-			return nil
+			gThread := gh.Thread{
+				SubType: gh.ISSUE,
+				Owner:   "tbistr",
+				Repo:    "gs-linker",
+				Num:     8,
+			}
+			return links.Sub(&gThread, thread)
 		}
+
 		onMsgSent sl.OnMsgSentFunc = func(client *sl.Client, thread *sl.Thread, text string) error {
-			fmt.Println("MsgSent:")
-			pp.Println(thread.Channel)
-			pp.Println(thread.TS)
-			pp.Println(text)
+			g, err := links.SearchByS(thread)
+			if err != nil {
+				return err
+			}
+			ghClient.CreateComment(context.Background(), g, text)
 			return nil
 		}
 	)
