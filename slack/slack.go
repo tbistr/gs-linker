@@ -7,12 +7,13 @@ import (
 )
 
 type Client struct {
-	slack       *slack.Client
-	config      *config
-	onMentioned OnMentionedFunc
+	slack  *slack.Client
+	config *config
 
-	// It is impossible to determine from the event whether the message is a reply or not.
-	// If ThreadTS is "", go through, but the registrant should determine if the message is a reply to the bot.
+	handleSub     HandleSubFunc
+	handleUnsub   HandleUnsubFunc
+	handleSummary HandleSummaryFunc
+
 	onMsgSent OnMsgSentFunc
 }
 
@@ -31,8 +32,26 @@ type Thread struct {
 	TS      string
 }
 
-type OnMentionedFunc func(client *Client, thread *Thread, text string) error
-type OnMsgSentFunc func(client *Client, thread *Thread, text string) error
+// command means how it is processed in OnMentioned.
+type command string
+
+// TODO: add abbreviation
+const (
+	// subscribe thread
+	subscribe command = "subscribe"
+	// unsubscribe thread
+	unsubscribe = "unsubscribe"
+	// post a thread summary
+	summary = "summary"
+)
+
+type HandleSubFunc func(client *Client, thread *Thread, rawURL string)
+type HandleUnsubFunc func(client *Client, thread *Thread)
+type HandleSummaryFunc func(client *Client, thread *Thread)
+
+// It is impossible to determine from the event whether the message is a reply or not.
+// If ThreadTS is "", go through, but the registrant should determine if the message is a reply to the bot.
+type OnMsgSentFunc func(client *Client, thread *Thread, text string)
 
 func New(token, signingSecret, botUserID string) *Client {
 	log.Println("creating github client")
@@ -44,23 +63,38 @@ func New(token, signingSecret, botUserID string) *Client {
 			signingSecret: signingSecret,
 			mentionedText: "<@" + botUserID + ">",
 		},
-		onMentioned: func(client *Client, thread *Thread, text string) error {
-			// TODO: print thread info.
-			log.Println("slack.Client.onMentioned is not registered")
-			return nil
+		handleSub: func(client *Client, thread *Thread, rawURL string) {
+			log.Println("slack.Client.handleSub is not registered")
+			log.Printf("thread info: %#v\n", thread)
 		},
-		onMsgSent: func(client *Client, thread *Thread, text string) error {
+		handleUnsub: func(client *Client, thread *Thread) {
+			log.Println("slack.Client.handleUnsub is not registered")
+			log.Printf("thread info: %#v\n", thread)
+		},
+		handleSummary: func(client *Client, thread *Thread) {
+			log.Println("slack.Client.handleSummary is not registered")
+			log.Printf("thread info: %#v\n", thread)
+		},
+		onMsgSent: func(client *Client, thread *Thread, text string) {
 			log.Println("slack.Client.onMsgSent is not registered")
-			return nil
+			log.Printf("thread info: %#v\n", thread)
 		},
 	}
 }
 
-// We want to use ghClient in On~Handlers.
-// So, We shouldnt assign handlers in New func.
+// We want to use ghClient in the handlers.
+// So, We should not assign handlers in New func.
 
-func (Client *Client) RegisterOnMentioned(f OnMentionedFunc) {
-	Client.onMentioned = f
+func (Client *Client) RegisterHandleSub(f HandleSubFunc) {
+	Client.handleSub = f
+}
+
+func (Client *Client) RegisterHandleUnsub(f HandleUnsubFunc) {
+	Client.handleUnsub = f
+}
+
+func (Client *Client) RegisterHandleSummary(f HandleSummaryFunc) {
+	Client.handleSummary = f
 }
 
 func (Client *Client) RegisterOnMsgSent(f OnMsgSentFunc) {

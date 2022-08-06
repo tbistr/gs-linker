@@ -58,6 +58,7 @@ func (client *Client) HandleEvent() func(http.ResponseWriter, *http.Request) {
 
 		if event.Type == slackevents.CallbackEvent {
 			// TODO: queuing events and avoid dupulicate fire.
+			// TODO: extract functions.
 			switch event := event.InnerEvent.Data.(type) {
 			case *slackevents.AppMentionEvent:
 				// get gslinker's user id at the first event.
@@ -65,27 +66,46 @@ func (client *Client) HandleEvent() func(http.ResponseWriter, *http.Request) {
 				// 	log.Printf("first mentioned event fired. mentionedText reloaded: %v\n", client.config.mentionedText)
 				// }
 				// TODO: consider if Mentioned as single msg. (event.ThreadTimeStamp=="")
-				log.Printf("catch mentioned event: %+v\n", event)
-				if err := client.onMentioned(client, &Thread{Channel: event.Channel, TS: event.ThreadTimeStamp}, event.Text); err != nil {
+				log.Printf("catch mentioned event: \n%#v\n", event)
+				c, rawURL, err := client.parseCommand(event.Text)
+				if err != nil {
+					// TODO: show help?
+					// TODO: add response?
 					log.Println(err)
 					return
+				}
+
+				thread := &Thread{Channel: event.Channel, TS: event.ThreadTimeStamp}
+				switch c {
+				case subscribe:
+					log.Println("fire subscribe command")
+					// HandleEvent must returns in 3s.
+					// https://api.slack.com/apis/connections/events-api#the-events-api__responding-to-events
+					// > Your app should respond to the event request with an HTTP 2xx within three seconds. If it does not, we'll consider the event delivery attempt failed. After a failure, we'll retry three times, backing off exponentially.
+					go client.handleSub(client, thread, rawURL)
+				case unsubscribe:
+					log.Println("fire unsubscribe command")
+					go client.handleUnsub(client, thread)
+				case summary:
+					log.Println("fire summary command")
+					go client.handleSummary(client, thread)
 				}
 				return
 			case *slackevents.MessageEvent:
 				// It is impossible to determine from the event whether the message is a reply or not.
 				if event.ThreadTimeStamp == "" {
+					log.Printf("dispose message event(it is not from thread): \n%#v\n", event.BotID)
 					return
 				}
 				// It also fires `AppMentionEvent`
 				// Ignore mentioned msg that have already been handled.
 				if client.containMention(event.Text) {
+					log.Printf("dispose message event(it is mentioned): \n%#v\n", event)
 					return
 				}
-				log.Printf("catch message event: %+v\n", event)
-				if err := client.onMsgSent(client, &Thread{Channel: event.Channel, TS: event.ThreadTimeStamp}, event.Text); err != nil {
-					log.Println(err)
-					return
-				}
+
+				log.Printf("catch message event: \n%#v\n", event)
+				go client.onMsgSent(client, &Thread{Channel: event.Channel, TS: event.ThreadTimeStamp}, event.Text)
 				return
 			}
 		}

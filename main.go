@@ -31,7 +31,6 @@ func main() {
 	slClient := sl.New(e.SlToken, e.SlSigningSecret, e.SlBotUserID)
 
 	links := link.Links{}
-
 	var (
 		onCommented gh.OnCommentedFunc = func(client *gh.Client, thread *gh.Thread, comment *github.IssueComment) error {
 			s, err := links.SearchByG(thread)
@@ -41,28 +40,44 @@ func main() {
 			return slClient.SendMsg(s, comment.GetBody())
 		}
 
-		onMentioned sl.OnMentionedFunc = func(client *sl.Client, thread *sl.Thread, text string) error {
-			// TODO: parse msg.
-			gThread := gh.Thread{
-				Owner: "tbistr",
-				Repo:  "gs-linker",
-				Num:   8,
+		handleSub sl.HandleSubFunc = func(client *sl.Client, thread *sl.Thread, rawURL string) {
+			owner, repo, num, err := ghClient.VerifyURL(rawURL)
+			if err != nil {
+				log.Println(err)
+				return
 			}
-			return links.Sub(&gThread, thread)
+			gThread := &gh.Thread{
+				Owner: owner,
+				Repo:  repo,
+				Num:   num,
+			}
+			if err := links.Sub(gThread, thread); err != nil {
+				log.Println(err)
+				return
+			}
 		}
+		handleUnsub sl.HandleUnsubFunc = func(client *sl.Client, thread *sl.Thread) {
+			if err := links.UnSub(thread); err != nil {
+				log.Println(err)
+				return
+			}
+		}
+		// handleSummary sl.HandleSummaryFunc = func(client *sl.Client, thread *sl.Thread) {}
 
-		onMsgSent sl.OnMsgSentFunc = func(client *sl.Client, thread *sl.Thread, text string) error {
+		onMsgSent sl.OnMsgSentFunc = func(client *sl.Client, thread *sl.Thread, text string) {
 			g, err := links.SearchByS(thread)
 			if err != nil {
-				return err
+				log.Println(err)
+				return
 			}
 			ghClient.CreateComment(context.Background(), g, text)
-			return nil
 		}
 	)
 
 	ghClient.RegisterOnCommented(onCommented)
-	slClient.RegisterOnMentioned(onMentioned)
+	slClient.RegisterHandleSub(handleSub)
+	slClient.RegisterHandleUnsub(handleUnsub)
+	// slClient.RegisterHandleSummary(handleSummary)
 	slClient.RegisterOnMsgSent(onMsgSent)
 
 	http.HandleFunc("/github/events", ghClient.HandleEvent())

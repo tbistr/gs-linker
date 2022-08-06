@@ -7,29 +7,27 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-
-	"github.com/google/go-github/v45/github"
 )
 
 // VerifyURL parses and verifies the URL and returns an error if the URL is incorrect.
 // https://pkg.go.dev/github.com/google/go-github/v45@v45.0.0/github?utm_source=gopls#Issue
 // > Note: As far as the GitHub API is concerned, every pull request is an issue, but not every issue is a pull request. Some endpoints, events, and webhooks may also return pull requests via this struct.
-func (client *Client) VerifyURL(rawURL string) (*github.Issue, error) {
-	owner, repo, num, err := parseURL(rawURL)
+func (client *Client) VerifyURL(rawURL string) (owner, repo string, num int, err error) {
+	log.Printf("verifing URL: %#v\n", rawURL)
+	owner, repo, num, err = parseURL(rawURL)
 	if err != nil {
-		return nil, err
+		return "", "", 0, err
 	}
-	issue, res, err := client.github.Issues.Get(context.Background(), owner, repo, num)
-	if err != nil {
-		return nil, err
+	// confirmation of existence
+	if _, _, err := client.github.Issues.Get(context.Background(), owner, repo, num); err != nil {
+		return "", "", 0, err
 	}
 
-	log.Printf("get issue info: %+v\n", res)
-	return issue, nil
+	log.Printf("confirmed the issue (or pr) is exist. owner: %#v repo: %#v num: %#v\n", owner, repo, num)
+	return owner, repo, num, nil
 }
 
 func parseURL(rawURL string) (owner, repo string, num int, err error) {
-	log.Printf("parsing URL: %#v\n", rawURL)
 	maybeURL, err := url.Parse(rawURL)
 	if err != nil {
 		return "", "", 0, err
