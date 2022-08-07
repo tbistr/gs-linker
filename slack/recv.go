@@ -2,9 +2,10 @@ package sl
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
@@ -15,7 +16,7 @@ func (client *Client) HandleEvent() func(http.ResponseWriter, *http.Request) {
 	// Refer exemple.
 	// https://github.com/slack-go/slack/blob/master/examples/eventsapi/events.go
 	return func(w http.ResponseWriter, r *http.Request) {
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -67,7 +68,7 @@ func (client *Client) HandleEvent() func(http.ResponseWriter, *http.Request) {
 				// }
 				// TODO: consider if Mentioned as single msg. (event.ThreadTimeStamp=="")
 				log.Printf("catch mentioned event: \n%#v\n", event)
-				c, rawURL, err := client.parseCommand(event.Text)
+				c, rawURL, err := parseCommand(event.Text)
 				if err != nil {
 					// TODO: show help?
 					// TODO: add response?
@@ -99,7 +100,7 @@ func (client *Client) HandleEvent() func(http.ResponseWriter, *http.Request) {
 				}
 				// It also fires `AppMentionEvent`
 				// Ignore mentioned msg that have already been handled.
-				if client.containMention(event.Text) {
+				if strings.Contains(event.Text, client.config.mentionedText) {
 					log.Printf("dispose message event(it is mentioned): \n%#v\n", event)
 					return
 				}

@@ -2,18 +2,16 @@ package sl
 
 import (
 	"fmt"
-	"log"
 	"strings"
 )
 
 // containMention returns if text is mentioned bot itself.
-func (client *Client) containMention(text string) bool {
-	log.Printf("judge if contain. mention: %#v text: %#v", client.config.mentionedText, text)
-	return strings.Contains(text, client.config.mentionedText)
-}
+// func (client *Client) containMention(text string) bool {
+// 	log.Printf("judge if contain. mention: %#v text: %#v", client.config.mentionedText, text)
+// 	return strings.Contains(text, client.config.mentionedText)
+// }
 
-//
-func (client *Client) parseCommand(text string) (c command, rawURL string, err error) {
+func parseCommand(text string) (c command, rawURL string, err error) {
 	params := strings.Fields(text)
 	tooFew := fmt.Errorf("too few args: %#v", params)
 	tooMany := fmt.Errorf("too many args: %#v", params)
@@ -36,18 +34,14 @@ func (client *Client) parseCommand(text string) (c command, rawURL string, err e
 
 	// assumes ["@gs", "unsubscribe"]
 	case string(unsubscribe):
-		if len(params) < 2 {
-			return "", "", tooFew
-		} else if 2 < len(params) {
+		if 2 < len(params) {
 			return "", "", tooMany
 		}
 		return unsubscribe, "", nil
 
 	// assumes ["@gs", "summary"]
 	case string(summary):
-		if len(params) < 2 {
-			return "", "", tooFew
-		} else if 2 < len(params) {
+		if 2 < len(params) {
 			return "", "", tooMany
 		}
 		return summary, "", nil
