@@ -22,19 +22,17 @@ type config struct {
 
 // Thread is info to designate github thread.
 type Thread struct {
-	SubType SubType
-	Owner   string
-	Repo    string
-	Num     int
+	ID     uint `gorm:"primarykey"`
+	LinkID uint
+	Owner  string
+	Repo   string
+	Num    int
 }
 
-// SubType is issue or pull request.
-type SubType string
-
-const (
-	ISSUE = SubType("issue")
-	PR    = SubType("pull request")
-)
+// avoid table name conflict.
+func (Thread) TableName() string {
+	return "github_threads"
+}
 
 type OnCommentedFunc func(client *Client, thread *Thread, comment *github.IssueComment) error
 

@@ -13,11 +13,16 @@ import (
 )
 
 type envs struct {
-	GhAppID          int64  `env:"GH_APP_ID"`
-	GhInstallationID int64  `env:"GH_INSTALLATION_ID"`
-	SlToken          string `env:"SL_TOKEN"`
-	SlSigningSecret  string `env:"SL_SIGNING_SECRET"`
-	SlBotUserID      string `env:"SL_BOT_USER_ID"`
+	GhAppID          int64 `env:"GH_APP_ID"`
+	GhInstallationID int64 `env:"GH_INSTALLATION_ID"`
+
+	SlToken         string `env:"SL_TOKEN"`
+	SlSigningSecret string `env:"SL_SIGNING_SECRET"`
+	SlBotUserID     string `env:"SL_BOT_USER_ID"`
+
+	DBName string `env:"MYSQL_DATABASE"`
+	DBUser string `env:"MYSQL_USER"`
+	DBPass string `env:"MYSQL_PASSWORD"`
 }
 
 func main() {
@@ -30,10 +35,17 @@ func main() {
 	ghClient := gh.New(e.GhAppID, e.GhInstallationID)
 	slClient := sl.New(e.SlToken, e.SlSigningSecret, e.SlBotUserID)
 
-	links := link.Links{}
+	linkerConf := link.DbConfig{
+		UserName: e.DBUser,
+		Pass:     e.DBPass,
+		Protocol: "tcp(gs-db:3306)",
+		DbName:   e.DBName,
+	}
+	linker := link.New(linkerConf)
+
 	var (
 		onCommented gh.OnCommentedFunc = func(client *gh.Client, thread *gh.Thread, comment *github.IssueComment) error {
-			s, err := links.SearchByG(thread)
+			s, err := linker.SearchByG(thread)
 			if err != nil {
 				return err
 			}
@@ -51,13 +63,13 @@ func main() {
 				Repo:  repo,
 				Num:   num,
 			}
-			if err := links.Sub(gThread, thread); err != nil {
+			if err := linker.Sub(gThread, thread); err != nil {
 				log.Println(err)
 				return
 			}
 		}
 		handleUnsub sl.HandleUnsubFunc = func(client *sl.Client, thread *sl.Thread) {
-			if err := links.UnSub(thread); err != nil {
+			if err := linker.UnSub(thread); err != nil {
 				log.Println(err)
 				return
 			}
@@ -65,7 +77,7 @@ func main() {
 		// handleSummary sl.HandleSummaryFunc = func(client *sl.Client, thread *sl.Thread) {}
 
 		onMsgSent sl.OnMsgSentFunc = func(client *sl.Client, thread *sl.Thread, text string) {
-			g, err := links.SearchByS(thread)
+			g, err := linker.SearchByS(thread)
 			if err != nil {
 				log.Println(err)
 				return
