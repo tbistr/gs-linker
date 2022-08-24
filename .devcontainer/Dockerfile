@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 ENV GOPATH=/home/vscode/go
+USER vscode
 RUN    go install -v golang.org/x/tools/gopls@latest \
     && go install -v github.com/cweill/gotests/gotests@latest \
     && go install -v github.com/fatih/gomodifytags@latest \
