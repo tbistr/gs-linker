@@ -40,21 +40,21 @@ const DB_CON_RETRY = 20
 
 // New creates Client.
 func New(conf DbConfig) *Client {
-	log.Println("connectiong db...")
 	// root:passwd@tcp(db:3306)/database?charset=utf8&parseTime=True&loc=Local
 	dsn := conf.UserName + ":" + conf.Pass + "@" + conf.Protocol + "/" + conf.DbName + "?charset=utf8&parseTime=True&loc=Local"
-	var (
-		db  *gorm.DB
-		err error
-	)
-	for i := 0; i < DB_CON_RETRY; i++ {
+
+	log.Println("connectiong db...")
+	var db *gorm.DB
+	for i := 1; i <= DB_CON_RETRY; i++ {
+		time.Sleep(2 * time.Second)
+		var err error
 		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 		if err != nil {
-			log.Printf("cannnot open db(%dtimes): %v\n", i, err)
-			if i == DB_CON_RETRY-1 {
-				log.Fatalln("connect_db challenge is over.")
+			if i == DB_CON_RETRY {
+				log.Fatalf("cannnot open db(tried %dtimes): %v\n", i, err)
 			}
-			time.Sleep(3 * time.Second)
+		} else {
+			break
 		}
 	}
 	log.Println("connected db")
