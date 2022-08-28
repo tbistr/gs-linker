@@ -22,8 +22,9 @@ type Client struct {
 // Link is bidirectional map between slack thread and github issue.
 type Link struct {
 	ID uint `gorm:"primarykey"`
-	Gh *gh.Thread
-	Sl *sl.Thread
+	// "OnDelete:CASCADE" means that deleting this Link will cascade delete gh.Thread and sl.Thread from DB.
+	Gh *gh.Thread `gorm:"constraint:OnDelete:CASCADE;"`
+	Sl *sl.Thread `gorm:"constraint:OnDelete:CASCADE;"`
 }
 
 // DbConfig is config and credential for DB.
