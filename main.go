@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -45,11 +46,10 @@ func main() {
 
 	var (
 		onCommented gh.OnCommentedFunc = func(client *gh.Client, thread *gh.Thread, comment *github.IssueComment) error {
-			s, err := linker.SearchByG(thread)
-			if err != nil {
-				return err
+			if s := linker.SearchByG(thread); s != nil {
+				return slClient.SendMsg(s, comment.GetBody())
 			}
-			return slClient.SendMsg(s, comment.GetBody())
+			return fmt.Errorf("link not found")
 		}
 
 		handleSub sl.HandleSubFunc = func(client *sl.Client, thread *sl.Thread, rawURL string) {
@@ -77,12 +77,10 @@ func main() {
 		// handleSummary sl.HandleSummaryFunc = func(client *sl.Client, thread *sl.Thread) {}
 
 		onMsgSent sl.OnMsgSentFunc = func(client *sl.Client, thread *sl.Thread, text string) {
-			g, err := linker.SearchByS(thread)
-			if err != nil {
-				log.Println(err)
-				return
+			if g := linker.SearchByS(thread); g != nil {
+				ghClient.CreateComment(context.Background(), g, text)
 			}
-			ghClient.CreateComment(context.Background(), g, text)
+			fmt.Printf("link not found\n")
 		}
 	)
 
