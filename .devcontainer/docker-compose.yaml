@@ -1,0 +1,43 @@
+version: "3.8"
+services:
+  dev-go:
+    build:
+      context: .
+      dockerfile: dockerfile
+    env_file: ../.env
+    environment:
+      - MYSQL_ADDR=dev-db
+    # Overrides default command so things don't shut down after the process ends.
+    command: sleep infinity
+    volumes:
+      # Mounts the project folder to '/workspace'. While this file is in .devcontainer,
+      # mounts are relative to the first file in the list, which is a level up.
+      - ..:/workspace:cached
+    ports:
+      - 3000:3000
+    depends_on:
+      - dev-db
+
+  dev-db:
+    image: mysql:8.0
+    env_file: ../.env
+    environment:
+      - LANG=ja_JP.UTF-8
+    tty: true
+
+  dev-db-gui:
+    image: phpmyadmin/phpmyadmin
+    env_file: ../.env
+    environment:
+      - LANG=ja_JP.UTF-8
+      - PMA_ARBITRARY=1
+      - PMA_HOSTS=dev-db
+      - PMA_USER=${MYSQL_USER}
+      - PMA_PASSWORD=${MYSQL_PASSWORD}
+    ports:
+      - 8080:80
+    depends_on:
+      - dev-db
+
+networks:
+  default:
