@@ -24,6 +24,7 @@ type envs struct {
 	DBName string `env:"MYSQL_DATABASE"`
 	DBUser string `env:"MYSQL_USER"`
 	DBPass string `env:"MYSQL_PASSWORD"`
+	DBAddr string `env:"MYSQL_ADDR"`
 }
 
 func main() {
@@ -36,14 +37,17 @@ func main() {
 	ghClient := gh.New(e.GhAppID, e.GhInstallationID)
 	slClient := sl.New(e.SlToken, e.SlSigningSecret, e.SlBotUserID)
 
-	linkerConf := link.DbConfig{
+	linkerConf := &link.DbConfig{
 		UserName: e.DBUser,
 		Pass:     e.DBPass,
-		Protocol: "tcp(gs-db:3306)",
+		Addr:     e.DBAddr,
 		DbName:   e.DBName,
 	}
 	linker := link.New(linkerConf)
 
+	// Ideally, the behavier should be implemented here and each liblary (gh, sl, link) should only provide functions.
+	// For example, response messages (ex. "already subscribed!!") should be written in below handlers.
+	// And more, functional logs (ex. "link stored in DB successfully") should be thrown from liblary.
 	var (
 		onCommented gh.OnCommentedFunc = func(client *gh.Client, thread *gh.Thread, comment *github.IssueComment) error {
 			if s := linker.SearchByG(thread); s != nil {
@@ -79,6 +83,7 @@ func main() {
 		onMsgSent sl.OnMsgSentFunc = func(client *sl.Client, thread *sl.Thread, text string) {
 			if g := linker.SearchByS(thread); g != nil {
 				ghClient.CreateComment(context.Background(), g, text)
+				return
 			}
 			fmt.Printf("link not found\n")
 		}

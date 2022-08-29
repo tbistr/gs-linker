@@ -5,38 +5,33 @@ services:
       context: .
       dockerfile: dockerfile.golang
     env_file: ./.env
+    environment:
+      - MYSQL_ADDR=db
     ports:
-      - "3000:3000"
+      - 80:3000
     depends_on:
-      - gs-db
+      - db
 
-  gs-db:
+  db:
     image: mysql:8.0
     env_file: ./.env
     environment:
       - LANG=ja_JP.UTF-8
     tty: true
-    # volumes:
-    #   - type: volume
-    #     source: gs_linker_volume
-    #     target: /var/lib/mysql
 
-  gs-db-gui:
+  db-gui:
     image: phpmyadmin/phpmyadmin
     env_file: ./.env
     environment:
       - LANG=ja_JP.UTF-8
       - PMA_ARBITRARY=1
-      - PMA_HOSTS=gs-db
+      - PMA_HOSTS=db
       - PMA_USER=${MYSQL_USER}
       - PMA_PASSWORD=${MYSQL_PASSWORD}
     ports:
       - 8080:80
     depends_on:
-      - gs-db
-
-# volumes:
-#   gs_linker_volume:
+      - db
 
 networks:
   default:

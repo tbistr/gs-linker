@@ -4,6 +4,7 @@ package link
 // TODO: Add testing.
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -32,30 +33,39 @@ type Link struct {
 type DbConfig struct {
 	UserName string // root
 	Pass     string // passwd
-	Protocol string // tcp(db:3306)
+	Addr     string // db
 	DbName   string // database
+}
+
+// dsn makes dsn string.
+func (conf *DbConfig) dsn() string {
+	// root:passwd@tcp(db:3306)/database?charset=utf8&parseTime=True&loc=Local
+	return conf.UserName + ":" + conf.Pass + "@tcp(" + conf.Addr + ":3306)/" + conf.DbName + "?charset=utf8&parseTime=True&loc=Local"
+
 }
 
 const DB_CON_RETRY = 20
 
-// New creates Client.
-func New(conf DbConfig) *Client {
-	// root:passwd@tcp(db:3306)/database?charset=utf8&parseTime=True&loc=Local
-	dsn := conf.UserName + ":" + conf.Pass + "@" + conf.Protocol + "/" + conf.DbName + "?charset=utf8&parseTime=True&loc=Local"
-
-	log.Println("connectiong db...")
+// initDB connects to DB server.
+func initDB(dsn string) (*gorm.DB, error) {
 	var db *gorm.DB
-	for i := 1; i <= DB_CON_RETRY; i++ {
+	var err error
+	for i := 0; i < DB_CON_RETRY; i++ {
 		time.Sleep(2 * time.Second)
-		var err error
 		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
-		if err != nil {
-			if i == DB_CON_RETRY {
-				log.Fatalf("cannnot open db(tried %dtimes): %v\n", i, err)
-			}
-		} else {
-			break
+		if err == nil {
+			return db, nil
 		}
+	}
+	return nil, fmt.Errorf("cannnot open db(tried %dtimes): %w", DB_CON_RETRY, err)
+}
+
+// New creates Client.
+func New(conf *DbConfig) *Client {
+	log.Println("connectiong db...")
+	db, err := initDB(conf.dsn())
+	if err != nil {
+		log.Fatalf("failed to init db: %v\n", err)
 	}
 	log.Println("connected db")
 
@@ -67,6 +77,6 @@ func New(conf DbConfig) *Client {
 
 	return &Client{
 		db:   db,
-		conf: &conf,
+		conf: conf,
 	}
 }
