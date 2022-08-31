@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: dockerfile
-    env_file: ../.env
+    env_file: .env
     environment:
       - MYSQL_ADDR=dev-db
     # Overrides default command so things don't shut down after the process ends.
@@ -20,14 +20,14 @@ services:
 
   dev-db:
     image: mysql:8.0
-    env_file: ../.env
+    env_file: .env
     environment:
       - LANG=ja_JP.UTF-8
     tty: true
 
   dev-db-gui:
     image: phpmyadmin/phpmyadmin
-    env_file: ../.env
+    env_file: .env
     environment:
       - LANG=ja_JP.UTF-8
       - PMA_ARBITRARY=1

@@ -16,4 +16,4 @@
 
 private-key.pem
 
-.env
+/.env
