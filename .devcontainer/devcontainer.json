@@ -10,7 +10,13 @@
         "terminal.integrated.defaultProfile.linux": "fish"
     },
     "extensions": [
-        "golang.Go"
+        "golang.Go",
+        "donjayamanne.githistory",
+        "GitHub.vscode-pull-request-github",
+        "eamodio.gitlens",
+        "oderwat.indent-rainbow",
+        "Gruntfuggly.todo-tree",
+        "shardulm94.trailing-spaces"
     ],
     "remoteUser": "vscode"
 }
