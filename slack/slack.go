@@ -28,15 +28,8 @@ type config struct {
 
 // Thread is info to designate slack thread.
 type Thread struct {
-	ID      uint `gorm:"primarykey"`
-	LinkID  uint
 	Channel string
 	TS      string
-}
-
-// avoid table name conflict.
-func (Thread) TableName() string {
-	return "slack_threads"
 }
 
 // command means how it is processed in OnMentioned.

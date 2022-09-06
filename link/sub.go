@@ -16,11 +16,10 @@ func (Client *Client) Sub(g *gh.Thread, s *sl.Thread) error {
 		return fmt.Errorf("already subscribed by this thread: %+v", s)
 	}
 
-	l := &Link{Gh: g, Sl: s}
-	Client.db.Create(l)
+	Client.db.Create(g, s)
 	// TODO: meaningless logs
 	// ex. create link: &{0xc000210180 0xc00020a040}
-	log.Printf("create link: %+v\n", l)
+	// log.Printf("create link: %+v\n", l)
 	return nil
 }
 
@@ -34,7 +33,7 @@ func (Client *Client) UnSub(s *sl.Thread) error {
 		return fmt.Errorf("not subscribed: %+v", s)
 	}
 
-	Client.db.Delete(&Link{ID: g.LinkID})
-	log.Printf("remove link: %+v\n", &Link{Gh: g, Sl: s})
+	Client.db.DeleteByS(s)
+	log.Printf("remove link: %+v\n", Link{Gh: g, Sl: s})
 	return nil
 }

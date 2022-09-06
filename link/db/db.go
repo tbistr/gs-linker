@@ -30,8 +30,8 @@ func (conf *Config) dsn() string {
 
 const DB_CON_RETRY = 20
 
-// InitDB connects to DB server.
-func InitDB(conf *Config) (*Client, error) {
+// New connects to DB server.
+func New(conf *Config) (*Client, error) {
 	var db *sql.DB
 	var err error
 	for i := 0; i < DB_CON_RETRY; i++ {

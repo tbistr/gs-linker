@@ -22,16 +22,9 @@ type config struct {
 
 // Thread is info to designate github thread.
 type Thread struct {
-	ID     uint `gorm:"primarykey"`
-	LinkID uint
-	Owner  string
-	Repo   string
-	Num    int
-}
-
-// avoid table name conflict.
-func (Thread) TableName() string {
-	return "github_threads"
+	Owner string
+	Repo  string
+	Num   int
 }
 
 type OnCommentedFunc func(client *Client, thread *Thread, comment *github.IssueComment) error

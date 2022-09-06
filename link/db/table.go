@@ -1,7 +1,8 @@
 package db
 
 import (
-	"database/sql"
+	gh "github.com/tbistr/gs-linker/github"
+	sl "github.com/tbistr/gs-linker/slack"
 )
 
 const (
@@ -11,17 +12,29 @@ const (
 )
 
 type LinkTable struct {
+	ID uint
+	gh *ghTable
+	sl *slTable
 }
 
-type GhTable struct {
+type ghTable struct {
+	ID     uint
+	LinkID uint
+	Owner  string
+	Repo   string
+	Num    int
 }
 
-type SlTable struct {
+type slTable struct {
+	ID      uint
+	LinkID  uint
+	Channel string
+	TS      string
 }
 
-func (client *Client) TouchTables(db *sql.DB) error {
+func (client *Client) TouchTables() error {
 	// link
-	if _, err := db.Exec(
+	if _, err := client.db.Exec(
 		"CREATE TABLE IF NOT EXISTS `links`" +
 			"(id BIGINT UNSIGNED AUTO_INCREMENT,PRIMARY KEY(id))",
 	); err != nil {
@@ -29,7 +42,7 @@ func (client *Client) TouchTables(db *sql.DB) error {
 	}
 
 	// github
-	if _, err := db.Exec(
+	if _, err := client.db.Exec(
 		"CREATE TABLE IF NOT EXISTS `github_threads`" +
 			"(`id` bigint unsigned AUTO_INCREMENT," +
 			"`link_id` bigint unsigned," +
@@ -43,7 +56,7 @@ func (client *Client) TouchTables(db *sql.DB) error {
 	}
 
 	// slack
-	if _, err := db.Exec(
+	if _, err := client.db.Exec(
 		"CREATE TABLE IF NOT EXISTS `slack_threads`(" +
 			"`id` BIGINT UNSIGNED AUTO_INCREMENT," +
 			"`link_id` BIGINT UNSIGNED," +
@@ -56,4 +69,27 @@ func (client *Client) TouchTables(db *sql.DB) error {
 	}
 
 	return nil
+}
+
+func (link *LinkTable) GetG() *gh.Thread {
+	if link == nil {
+		return nil
+	} else {
+		return &gh.Thread{
+			Owner: link.gh.Owner,
+			Repo:  link.gh.Repo,
+			Num:   link.gh.Num,
+		}
+	}
+}
+
+func (link *LinkTable) GetS() *sl.Thread {
+	if link == nil {
+		return nil
+	} else {
+		return &sl.Thread{
+			Channel: link.sl.Channel,
+			TS:      link.sl.TS,
+		}
+	}
 }
